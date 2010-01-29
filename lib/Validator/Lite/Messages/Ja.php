@@ -1,6 +1,6 @@
 <?php
 
-class FormValidatorLiteMessageJa
+class ValidatorLiteMessageJa
 {
     public $messages = array(
         'not_null'    => '[_1] を入力してください',

@@ -1,8 +1,8 @@
 <?php
-require_once 'FormValidator/Lite/Constraint.php';
+require_once 'Validator/Lite/Constraint.php';
 
 
-class FormValidatorLiteConstraintDefault extends FormValidatorLiteConstraint
+class ValidatorLiteConstraintDefault extends ValidatorLiteConstraint
 {
     function register_rule ( )
     {
@@ -29,6 +29,11 @@ class FormValidatorLiteConstraintDefault extends FormValidatorLiteConstraint
         else if ( is_null($v) ) {
             return false;
         }
+        else if ( is_array($v) ) {
+            if ( empty($v) ) {
+                return false;
+            }
+        }
         else if (strcmp($v, '') === 0) {
             return false;
         }
@@ -41,6 +46,9 @@ class FormValidatorLiteConstraintDefault extends FormValidatorLiteConstraint
 
     function v_int ($v)
     {
+        if ( !is_numeric($v) ) {
+            return false;
+        }
         if ( preg_match('/^[+\-]?[0-9]+$/', $v) ) {
             return true;
         }
@@ -50,6 +58,10 @@ class FormValidatorLiteConstraintDefault extends FormValidatorLiteConstraint
 
     function v_uint ($v)
     {
+        if ( !is_numeric($v) ) {
+            return false;
+        }
+
         if ( preg_match('/^[0-9]+$/', $v) ) {
             return true;
         }

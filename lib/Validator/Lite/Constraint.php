@@ -1,6 +1,9 @@
 <?php
+require_once 'Validator/Lite/Constraint/Default.php';
+require_once 'Validator/Lite/Constraint/Array.php';
 
-abstract class FormValidatorLiteConstraint
+
+abstract class ValidatorLiteConstraint
 {
     protected $validator;
 

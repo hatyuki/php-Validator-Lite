@@ -1,12 +1,12 @@
 <?php
-require_once 'FormValidator/Lite/Constraint/Default.php';
-require_once 'FormValidator/Lite/Messages/Ja.php';
+require_once 'Validator/Lite/Constraint.php';
+require_once 'Validator/Lite/Messages/Ja.php';
 
-class FormValidatorLite
+class ValidatorLite
 {
     public    $rules;
+    public    $error;
     protected $query;
-    protected $error;
     protected $error_ary;
     protected $msg;
 
@@ -21,7 +21,11 @@ class FormValidatorLite
         $this->error     = array( );
         $this->error_ary = array( );
 
-        $this->load_constraints('+Default');
+        if ( !is_array($constraint) ) {
+            $constraint = array($constraint);
+        }
+
+        array_push($constraint, '+Default');
         $this->load_constraints($constraint);
     }
 
@@ -31,13 +35,18 @@ class FormValidatorLite
         $query = $this->query;
 
         foreach ($rule_ary as $key => $rules) {
-            if ( array_key_exists($key, $query) ) {
+            $value = null;
+
+            if ( isset($query[$key]) ) {
                 $value = $query[$key];
             }
 
             foreach ($rules as $rule) {
                 if ( $this->ref($rule) ) {
                     list($rule_name, $args) = each($rule);
+                    if ( !is_array($args) ) {
+                        $args = array($args);
+                    }
                 }
                 else {
                     $rule_name = $rule;
@@ -77,7 +86,7 @@ class FormValidatorLite
 
         foreach ($constraint as $c) {
             if ( preg_match('/^\+(.+)$/', $c, $m) ) {
-                $c = 'FormValidatorLiteConstraint'.$m[1];
+                $c = 'ValidatorLiteConstraint'.$m[1];
             }
 
             if ( class_exists($c) ) {
@@ -99,7 +108,7 @@ class FormValidatorLite
 
     function load_function_message ($lang='Ja')
     {
-        $pkg = "FormValidatorLiteMessage$lang";
+        $pkg = "ValidatorLiteMessage$lang";
         $obj = new $pkg( );
 
         $this->msg['function'] = $obj->messages;
@@ -115,7 +124,7 @@ class FormValidatorLite
     function set_message_data ($msg)
     {
         foreach ( array('message', 'param', 'function') as $key ) {
-            if ( !array_key_exists($key, $msg) ) {
+            if ( !isset($msg[$key]) ) {
                 trigger_error("missing key $key", E_USER_ERROR);
             } 
         }
@@ -143,7 +152,7 @@ class FormValidatorLite
             $param = $err[0];
             $func  = $err[1];
 
-            if ( array_key_exists("$param.$func", $dup_check) ) {
+            if ( isset($dup_check["$param.$func"]) ) {
                 continue;
             }
 
@@ -180,7 +189,7 @@ class FormValidatorLite
         else {
             trigger_error("$param.$function is not defined in message file", E_USER_WARNING);
 
-            if ( array_key_exists('default_tmpl', $msg) ) {
+            if ( isset($msg['default_tmpl']) ) {
                 $args[ ] = $err_function ? $err_function : $msg['default_tmpl'];
                 $args[ ] = $err_function ? $err_function : $param;
 
@@ -195,11 +204,13 @@ class FormValidatorLite
 
     private function go ($value, $rule_name, $args)
     {
-        if ( !isset($value) && $rule_name === 'NOT_NULL') {
-            return false;
+        if ( !isset($value) ) {
+            return $rule_name === 'NOT_NULL'
+                 ? false
+                 : true;
         }
         else {
-            if ( !array_key_exists($rule_name, $this->rules) ) {
+            if ( !isset($this->rules[$rule_name]) ) {
                 trigger_error("unknown rule $rule_name", E_USER_ERROR);
             }
 
@@ -243,6 +254,6 @@ class FormValidatorLite
 
     private function gen_msg ($tmpl, $args)
     {
-        return preg_replace('/\[_(\d+)\]/e', $args["${1}"-1], $tmpl);
+        return preg_replace('/\[_(\d+)\]/', $args, $tmpl);
     }
 }
